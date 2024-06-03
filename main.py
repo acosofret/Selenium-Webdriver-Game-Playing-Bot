@@ -12,72 +12,97 @@ game_link = "https://orteil.dashnet.org/experiments/cookie/"
 
 driver.get(game_link)
 
-# Upgrades Costs & Buttons:
-time_machine_cost = float(((driver.find_element(By.ID, value="buyTime machine")).text.split(" - "))[1].split("\n")[0].replace(",",""))
-time_machine_button = driver.find_element(By.ID, value="buyTime machine")
+iteration = 0
 
-portal_cost = float(((driver.find_element(By.CSS_SELECTOR, value="#buyPortal b")).text.split(" - "))[1].split("\n")[0].replace(",",""))
-portal_button = driver.find_element(By.ID, value="buyPortal")
+def get_element_text_as_float(element):
+    return float(element.text.split(" - ")[1].split("\n")[0].replace(",", ""))
 
-alchemy_lab_cost = float(((driver.find_element(By.ID, value="buyAlchemy lab")).text.split(" - "))[1].split("\n")[0].replace(",",""))
-alchemy_lab_button = driver.find_element(By.ID, value="buyAlchemy lab")
-
-shipment_cost = float(driver.find_element(By.CSS_SELECTOR, value="#buyShipment b").text.split(" - ")[1].replace(",",""))
-shipment_button = driver.find_element(By.ID, value="buyShipment")
-
-mine_cost = float(driver.find_element(By.CSS_SELECTOR, value="#buyMine b").text.split(" - ")[1].replace(",",""))
-mine_button = driver.find_element(By.ID, value="buyMine")
-
-factory_cost = float(driver.find_element(By.CSS_SELECTOR, value="#buyFactory b").text.split(" - ")[1].replace(",",""))
-factory_button = driver.find_element(By.ID, value="buyFactory")
-
-grandma_cost = float(driver.find_element(By.CSS_SELECTOR, value="#buyGrandma b").text.split(" - ")[1].replace(",",""))
-grandma_button = driver.find_element(By.ID, value="buyGrandma")
-
-cursor_cost = float(driver.find_element(By.CSS_SELECTOR, value="#buyCursor b").text.split(" - ")[1].replace(",",""))
-cursor_button = driver.find_element(By.ID, value="buyCursor")
-
-# Cookie (button) to click:
-cookie = driver.find_element(By.CSS_SELECTOR, value="#cookie")
-
-# Upgrade function:
 def upgrade_if_possible():
-	if money >= time_machine_cost:
-		time_machine_button.click()
-	elif money >= portal_cost:
-		portal_button.click()
-	elif money >= alchemy_lab_cost:
-		alchemy_lab_button.click()
-	elif money >= shipment_cost:
-		shipment_button.click()
-	elif money >= mine_cost:
-		mine_button.click()
-	elif money >= factory_cost:
-		factory_button.click()
-	elif money >= grandma_cost:
-		grandma_button.click()
-	elif money >= cursor_cost:
-		cursor_button.click()
+    global money
 
-end_time = time.time() + 300
+    try:
+        time_machine_cost = get_element_text_as_float(driver.find_element(By.ID, value="buyTime machine"))
+        if money >= time_machine_cost:
+            driver.find_element(By.ID, value="buyTime machine").click()
+            return
+    except Exception:
+        pass
+
+    try:
+        portal_cost = get_element_text_as_float(driver.find_element(By.CSS_SELECTOR, value="#buyPortal b"))
+        if money >= portal_cost:
+            driver.find_element(By.ID, value="buyPortal").click()
+            return
+    except Exception:
+        pass
+
+    try:
+        alchemy_lab_cost = get_element_text_as_float(driver.find_element(By.ID, value="buyAlchemy lab"))
+        if money >= alchemy_lab_cost:
+            driver.find_element(By.ID, value="buyAlchemy lab").click()
+            return
+    except Exception:
+        pass
+
+    try:
+        shipment_cost = get_element_text_as_float(driver.find_element(By.CSS_SELECTOR, value="#buyShipment b"))
+        if money >= shipment_cost:
+            driver.find_element(By.ID, value="buyShipment").click()
+            return
+    except Exception:
+        pass
+
+    try:
+        mine_cost = get_element_text_as_float(driver.find_element(By.CSS_SELECTOR, value="#buyMine b"))
+        if mine_cost <= 3600:
+            if money >= mine_cost:
+                driver.find_element(By.ID, value="buyMine").click()
+                return
+    except Exception:
+        pass
+
+    try:
+        factory_cost = get_element_text_as_float(driver.find_element(By.CSS_SELECTOR, value="#buyFactory b"))
+        if factory_cost <= 1500:
+            if money >= factory_cost:
+                driver.find_element(By.ID, value="buyFactory").click()
+                return
+    except Exception:
+        pass
+
+
+    try:
+        grandma_cost = get_element_text_as_float(driver.find_element(By.CSS_SELECTOR, value="#buyGrandma b"))
+        if grandma_cost <= 230:
+            if money >= grandma_cost:
+                driver.find_element(By.ID, value="buyGrandma").click()
+                return
+    except Exception:
+        pass
+
+    # try:
+    #     cursor_cost = get_element_text_as_float(driver.find_element(By.CSS_SELECTOR, value="#buyCursor b"))
+    #     if money >= cursor_cost:
+    #         driver.find_element(By.ID, value="buyCursor").click()
+    #         return
+    # except Exception:
+    #     pass
+
+start_time = time.time()
+end_time = start_time + 300
+upgrade_time = start_time
 
 while time.time() < end_time:
-	cookie.click()
-	money = float(driver.find_element(By.ID, value="money").text)
-	if money > grandma_cost:
-		grandma_button.click()
-	time.sleep(0.1)
+    cookie = driver.find_element(By.CSS_SELECTOR, value="#cookie")
+    cookie.click()
+    iteration += 1
+    if time.time() - upgrade_time >= 5:
+        money = float(driver.find_element(By.ID, value="money").text.replace(",", ""))
+        upgrade_if_possible()
+        upgrade_time = time.time()
+    # time.sleep(0.1)
 
-
-
-
-# if time.time() > time_to_finish:
-# 	cookies_per_second = driver.find_element(By.ID, value="cps")
-# 	print(cookies_per_second.text)
-# 	driver.quit()
-
-
-
-
-
-
+if time.time() > end_time:
+    cookies_per_second = driver.find_element(By.ID, value="cps")
+    print(f"Final score (5min): {cookies_per_second.text}")
+    driver.quit()
